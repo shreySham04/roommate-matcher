@@ -1,150 +1,137 @@
-import React, { useState } from "react";
-import Papa from "papaparse";
+import React, { useState, useEffect } from "react";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import LoginPage from "./LoginPage";
 
-export default function RoommateSelector() {
-  const [csvData, setCsvData] = useState([]);
-  const [serialNo, setSerialNo] = useState("");
-  const [results, setResults] = useState([]);
+// --- Dashboard Component ---
+function Dashboard({ handleLogout }) {
+  const [data, setData] = useState([]);
+  const [selectedPersonIndex, setSelectedPersonIndex] = useState(null);
+  const [matches, setMatches] = useState([]);
+  const [scriptLoaded, setScriptLoaded] = useState(false);
+
+  useEffect(() => {
+    const script = document.createElement('script');
+    script.src = "https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js";
+    script.async = true;
+    script.onload = () => setScriptLoaded(true);
+    document.body.appendChild(script);
+    return () => {
+      document.body.removeChild(script);
+    };
+  }, []);
 
   const handleFileUpload = (e) => {
     const file = e.target.files[0];
-    Papa.parse(file, {
-      header: true,
-      skipEmptyLines: true,
-      complete: (results) => {
-        setCsvData(results.data);
-        setResults([]);
-      },
-    });
+    if (file && window.Papa) {
+      window.Papa.parse(file, {
+        header: true,
+        skipEmptyLines: true,
+        complete: (result) => {
+          setData(result.data);
+          setMatches([]);
+          setSelectedPersonIndex(null);
+        },
+      });
+    }
   };
 
-  const calculateCompatibility = (user1, user2) => {
-    let score = 0;
-    let reasons = [];
-
-    const getField = (obj, key) => (obj[key] ? obj[key].toString().toLowerCase().trim() : "");
-
-    // City match
-    if (getField(user1, "Preferred City\\Area to live in") && getField(user1, "Preferred City\\Area to live in") === getField(user2, "Preferred City\\Area to live in")) {
-      score += 5;
-      reasons.push("Same city preference");
-    }
-
-    // Sleeping schedule
-    if (getField(user1, "Sleeping Schedule") && getField(user1, "Sleeping Schedule") === getField(user2, "Sleeping Schedule")) {
-      score += 3;
-      reasons.push("Same sleeping schedule");
-    }
-
-    // Smoking habits
-    if (getField(user1, "Smoking Habits") && getField(user1, "Smoking Habits") === getField(user2, "Smoking Habits")) {
-      score += 2;
-      reasons.push("Same smoking habit");
-    }
-
-    // Drinking habits
-    if (getField(user1, "Drinking Habits") && getField(user1, "Drinking Habits") === getField(user2, "Drinking Habits")) {
-      score += 2;
-      reasons.push("Same drinking habit");
-    }
-
-    // Cleanliness preference
-    let clean1 = parseInt(user1["Cleanliness Preference"]);
-    let clean2 = parseInt(user2["Cleanliness Preference"]);
-    if (!isNaN(clean1) && !isNaN(clean2) && Math.abs(clean1 - clean2) <= 1) {
-      score += 3;
-      reasons.push("Similar cleanliness preference");
-    }
-
-    // Cooking habits
-    if (getField(user1, "Cooking Habits") && getField(user1, "Cooking Habits") === getField(user2, "Cooking Habits")) {
-      score += 2;
-      reasons.push("Same cooking habits");
-    }
-
-    // Pets
-    let pet1 = getField(user1, "Pets");
-    let pet2 = getField(user2, "Pets");
-    if ((pet1.includes("open") && pet2.includes("open")) || (pet1.includes("not") && pet2.includes("not"))) {
-      score += 2;
-      reasons.push("Similar pet preference");
-    }
-
-    // Hobbies / Interests
-    let hobbies1 = new Set(getField(user1, "Hobbies/Interests").split(","));
-    let hobbies2 = new Set(getField(user2, "Hobbies/Interests").split(","));
-    let common = [...hobbies1].filter((h) => hobbies2.has(h));
-    if (common.length > 0) {
-      let hobbyScore = Math.min(5, common.length) * 3;
-      score += hobbyScore;
-      reasons.push("Common hobbies: " + common.join(", "));
-    }
-
-    // Roommate gender compatibility
-    let pref1 = getField(user1, "Preferred Roommate Gender");
-    let gender2 = getField(user2, "Gender");
-    let pref2 = getField(user2, "Preferred Roommate Gender");
-    let gender1 = getField(user1, "Gender");
-
-    if ((pref1 === "any" || pref1 === gender2) && (pref2 === "any" || pref2 === gender1)) {
-      score += 3;
-      reasons.push("Roommate gender preference compatible");
-    }
-
-    return { score, reasons };
+  const findMatches = (personIndex) => {
+    if (personIndex === null || personIndex === "" || !data[personIndex]) {
+        setMatches([]);
+        return;
+    };
+    const person = data[personIndex];
+    const scores = data
+      .map((other, i) => {
+        if (i === parseInt(personIndex, 10)) return null;
+        let score = 0;
+        const weights = { city: 3, rent: 2, schedule: 2, cleanliness: 1, cooking: 1, smoking: 1 };
+        if (person["Preferred City\\Area to live in"] === other["Preferred City\\Area to live in"]) score += weights.city;
+        if (person["Monthly Rent Budget"] === other["Monthly Rent Budget"]) score += weights.rent;
+        if (person["Sleeping Schedule"] === other["Sleeping Schedule"]) score += weights.schedule;
+        if (person["Cleanliness Preference"] === other["Cleanliness Preference"]) score += weights.cleanliness;
+        if (person["Cooking Habits"] === other["Cooking Habits"]) score += weights.cooking;
+        if (person["Smoking Habits"] === other["Smoking Habits"]) score += weights.smoking;
+        return { name: other["Full Name"], score };
+      })
+      .filter(Boolean);
+    const sorted = scores.sort((a, b) => b.score - a.score);
+    setMatches(sorted.slice(0, 3));
   };
-
-  const findMatches = () => {
-    const serial = parseInt(serialNo);
-    if (isNaN(serial) || serial < 2 || serial >= csvData.length + 2) {
-      alert("Invalid serial number!");
-      return;
-    }
-    const index = serial - 2;
-    const user = csvData[index];
-    let matches = [];
-
-    csvData.forEach((other, idx) => {
-      if (idx === index) return;
-      const { score, reasons } = calculateCompatibility(user, other);
-      matches.push({ name: other["Full Name"], score, reasons });
-    });
-
-    matches.sort((a, b) => b.score - a.score);
-    setResults(matches.slice(0, 3));
-  };
+  
+  const handleSelectionChange = (e) => {
+      const index = e.target.value;
+      setSelectedPersonIndex(index);
+      findMatches(index);
+  }
 
   return (
-    <div style={{ maxWidth: "600px", margin: "20px auto", fontFamily: "Arial, sans-serif" }}>
-      <h2>Roommate Selector</h2>
-      <div>
-        <label>Upload CSV file: </label>
-        <input type="file" accept=".csv" onChange={handleFileUpload} />
-      </div>
-      <div style={{ marginTop: "10px" }}>
-        <label>Enter Serial Number: </label>
-        <input type="number" value={serialNo} onChange={(e) => setSerialNo(e.target.value)} />
-        <button onClick={findMatches} style={{ marginLeft: "10px" }}>
-          Find Matches
-        </button>
-      </div>
-      <div style={{ marginTop: "20px" }}>
-        {results.length > 0 && (
-          <>
-            <h3>Top Matches:</h3>
-            {results.map((match, idx) => (
-              <div key={idx} style={{ border: "1px solid #ccc", padding: "10px", marginBottom: "10px" }}>
-                <strong>{match.name}</strong> (Score: {match.score})
-                <ul>
-                  {match.reasons.map((reason, i) => (
-                    <li key={i}>{reason}</li>
-                  ))}
-                </ul>
+    <div>
+      <header className="dashboard-header">
+        <h1 className="dashboard-title">Roomer</h1>
+        <button onClick={handleLogout} className="logout-button">Logout</button>
+      </header>
+      <main className="dashboard-main">
+        <div className="panel">
+          <h2>Find Matches</h2>
+          <div className="panel-content">
+            <div>
+              <label htmlFor="csv-upload">1. Upload CSV File</label>
+              <input id="csv-upload" type="file" accept=".csv" onChange={handleFileUpload} disabled={!scriptLoaded}/>
+               {!scriptLoaded && <p style={{fontSize: '0.8rem', color: '#666'}}>Loading CSV parser...</p>}
+            </div>
+            {data.length > 0 && (
+              <div>
+                <label htmlFor="person-select">2. Select a Person</label>
+                <select id="person-select" value={selectedPersonIndex === null ? '' : selectedPersonIndex} onChange={handleSelectionChange}>
+                  <option value="" disabled>-- Choose --</option>
+                  {data.map((row, i) => (<option key={i} value={i}>{row["Full Name"] || `Row ${i + 1}`}</option>))}
+                </select>
               </div>
-            ))}
-          </>
-        )}
-      </div>
+            )}
+          </div>
+        </div>
+        <div className="panel">
+          <h2>Top 3 Matches</h2>
+          {matches.length > 0 ? (
+            <ul className="matches-list">
+              {matches.map((m, i) => (
+                <li key={i} className="match-item">
+                  <span className="match-name">{i + 1}. {m.name}</span>
+                  <span className="match-score">Score: {m.score}</span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <div className="no-matches"><p>Please upload a file and select a person to see matches.</p></div>
+          )}
+        </div>
+      </main>
     </div>
   );
 }
+
+// --- Main App Component ---
+function App() {
+  const [loggedInUser, setLoggedInUser] = useState(null);
+
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/login" element={<LoginPage onLogin={setLoggedInUser} />} />
+        <Route
+          path="/"
+          element={
+            loggedInUser ? (
+              <Dashboard handleLogout={() => setLoggedInUser(null)} />
+            ) : (
+              <Navigate to="/login" />
+            )
+          }
+        />
+      </Routes>
+    </BrowserRouter>
+  );
+}
+
+export default App;
