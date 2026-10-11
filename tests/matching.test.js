@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { getAvailableTopics, parseRentRange, rankMatches, scorePair } from "../src/matching.js";
+import { getAvailableTopics, getTopicHeading, parseRentRange, rankMatches, scorePair } from "../src/matching.js";
 
 const profile = (overrides = {}) => ({
   "Preferred City\\Area to live in": " Hyderabad ",
@@ -52,6 +52,7 @@ test("applies custom topic weights", () => {
 });
 
 test("shows settings only for uploaded columns", () => {
-  const rows = [{ "Preferred City\\Area to live in": "Pune", "Monthly Rent Budget": "Rs5,000 - Rs10,000", "Sleeping Schedule": "Night Owl", "Cleanliness Preference": "4" }];
+  const rows = [{ "Preferred City/Area to live in": "Pune", "Monthly Rent Budget": "Rs5,000 - Rs10,000", "Sleeping Schedule": "Night Owl", "Cleanliness Preference": "4" }];
   assert.deepEqual(getAvailableTopics(rows), ["city", "rent", "schedule", "cleanliness"]);
+  assert.equal(getTopicHeading("city", rows), "Preferred City/Area to live in");
 });

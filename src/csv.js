@@ -15,8 +15,9 @@ export const parseCsv = (source) => {
   return rows.map((values) => Object.fromEntries(headers.map((header, index) => [header, values[index] || ""])));
 };
 
-export const validateRows = (rows, requiredColumns) => {
+export const validateRows = (rows, requiredColumns = []) => {
   if (!rows.length) return "The CSV does not contain any profiles.";
+  if (!Object.keys(rows[0]).some((column) => column.trim())) return "The spreadsheet does not contain column headings.";
   const missingColumns = requiredColumns.filter((column) => !(column in rows[0]));
   return missingColumns.length ? `Missing required columns: ${missingColumns.join(", ")}` : null;
 };

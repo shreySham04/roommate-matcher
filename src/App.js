@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import LoginPage from "./LoginPage.js";
 import { parseSpreadsheet, validateRows } from "./csv.js";
-import { getAvailableTopics, rankMatches, REQUIRED_COLUMNS, TOPIC_LABELS, WEIGHTS } from "./matching.js";
+import { getAvailableTopics, getTopicHeading, rankMatches, WEIGHTS } from "./matching.js";
 
 function Dashboard({ handleLogout }) {
   const [data, setData] = useState([]);
@@ -31,7 +31,7 @@ function Dashboard({ handleLogout }) {
     if (file.size > 2 * 1024 * 1024) return setError("CSV files must be smaller than 2 MB.");
     parseSpreadsheet(file).then((rows) => {
       try {
-        const validationError = validateRows(rows, REQUIRED_COLUMNS);
+        const validationError = validateRows(rows);
         if (validationError) throw new Error(validationError);
         setData(rows); setMatches([]); setSelectedPersonIndex("");
       } catch (uploadError) {
@@ -70,7 +70,7 @@ function Dashboard({ handleLogout }) {
         {error && <p className="error-message" role="alert">{error}</p>}
         <div className="privacy-note"><strong>Privacy first.</strong> Names and serials can be shown locally; emails, phone numbers, and free-text notes are excluded.</div>
       </section>
-      <section className="panel settings-panel"><p className="eyebrow">02 / SETTINGS</p><h2>Adjust priorities</h2><p className="panel-intro">Set each topic from 0 to 10. Only topics found in the uploaded file are shown.</p>{availableTopics.length > 0 ? <div className="weight-grid">{availableTopics.map((topic) => <label key={topic} className="weight-control"><span>{TOPIC_LABELS[topic]}</span><input type="number" min="0" max="10" step="1" value={weights[topic]} onChange={(event) => handleWeightChange(topic, event.target.value)} /></label>)}</div> : <p className="field-help">Upload a CSV or XLSX file to see settings for its available topics.</p>}</section>
+      <section className="panel settings-panel"><p className="eyebrow">02 / SETTINGS</p><h2>Adjust priorities</h2><p className="panel-intro">Set each topic from 0 to 10. Controls use headings found in the uploaded file.</p>{availableTopics.length > 0 ? <div className="weight-grid">{availableTopics.map((topic) => <label key={topic} className="weight-control"><span>{getTopicHeading(topic, data)}</span><input type="number" min="0" max="10" step="1" value={weights[topic]} onChange={(event) => handleWeightChange(topic, event.target.value)} /></label>)}</div> : <p className="field-help">Upload a CSV or XLSX file to see priority controls for recognized headings.</p>}</section>
       <section className="panel results-panel"><div className="results-heading"><div><p className="eyebrow">03 / COMPATIBILITY</p><h2>Top eligible matches</h2></div><span className="score-legend">Rule-based score / 100</span></div>
         {matches.length > 0 ? <ol className="matches-list">{matches.map((match) => <li key={match.candidateIndex} className="match-item"><div className="match-rank">{String(match.candidateIndex + 1).padStart(2, "0")}</div><div className="match-content"><div className="match-topline"><h3>{match.displayName}</h3><strong>{match.score}</strong></div><p>{match.shared.length ? `Shared: ${match.shared.join(", ")}.` : "No shared preferences were found."}</p><div className="contribution-list">{match.contributions.slice(0, 4).map((item) => <span key={item.key}>{item.label}: {Math.round(item.similarity * 100)}%</span>)}</div></div></li>)}</ol> : <div className="no-matches"><span>—</span><p>Upload a dataset and choose a profile to see explainable recommendations.</p></div>}
         <p className="disclaimer">Scores summarize selected preferences. They are not probabilities of successful cohabitation.</p>
