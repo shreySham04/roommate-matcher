@@ -21,7 +21,7 @@ Roomer is a privacy-conscious roommate recommendation demo. It ranks eligible sy
 - React guest-mode interface with local CSV upload.
 - Browser-local CSV parsing with a 2 MB file limit and required-column validation.
 - One authoritative implementation in `matching.js` for normalization, hard eligibility, weighted scoring, explanations, and deterministic ties.
-- Synthetic `roomy.csv`; recommendation cards never display names, emails, phone numbers, or free-text survey responses.
+- Header-only `roomy.csv`; no profiles are prefilled in the repository. Recommendation cards never display names, emails, phone numbers, or free-text survey responses.
 - Node test suite covering rent parsing, normalization, ranking, duplicate/self exclusion, gender constraints, ties, and empty input.
 
 The score is a rule-based compatibility summary, not a probability of successful cohabitation and not a validated prediction of user satisfaction.
@@ -67,6 +67,6 @@ The project currently has no backend, accounts, database, or external API. The g
 
 ## Privacy and limitations
 
-The replacement CSV contains synthetic records. The previous CSV and notebook included personal and sensitive survey fields; deleting them from the current working tree does not erase earlier Git commits. Historical cleanup requires an authorized repository-history rewrite, coordination with any remotes and collaborators, and verification with repository scans. No such history purge is claimed here.
+The repository CSV contains headers only and no profiles. Add synthetic or properly anonymized rows locally before matching. The previous CSV and notebook included personal and sensitive survey fields; deleting them from the current working tree does not erase earlier Git commits. Historical cleanup requires an authorized repository-history rewrite, coordination with any remotes and collaborators, and verification with repository scans. No such history purge is claimed here.
 
 The current application does not yet provide a backend, persistent accounts, notebook-based EDA, recommendation benchmarks, or frontend component tests. Demographic fields are not scored; the explicit roommate-gender preference remains an eligibility rule because it is selected as a housing requirement in the source schema. Future work should add a rewritten synthetic-data analysis notebook, broader CSV tests, and a security-reviewed backend only if accounts or persistence become necessary.

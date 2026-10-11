@@ -11,6 +11,15 @@ function Dashboard({ handleLogout }) {
   const [error, setError] = useState("");
   const [fileName, setFileName] = useState("");
 
+  const profileLabel = (row, index) => {
+    const serial = row["Serial No"] || row["Serial Number"] || row.Serial || row.ID;
+    const name = row["Full Name"] || row.Name;
+    if (serial && name) return `${serial} - ${name}`;
+    if (serial) return `Serial ${serial}`;
+    if (name) return name;
+    return `Candidate ${index + 1}`;
+  };
+
   const handleFileUpload = (event) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -39,12 +48,20 @@ function Dashboard({ handleLogout }) {
     setMatches(rankMatches(data, index).matches);
   };
 
+  const clearUploadedData = () => {
+    setData([]);
+    setMatches([]);
+    setSelectedPersonIndex("");
+    setFileName("");
+    setError("");
+  };
+
   return <div className="app-shell">
     <header className="dashboard-header"><div><p className="eyebrow">ROOMER / DEMO MODE</p><h1 className="dashboard-title">Find a better fit.</h1></div><button type="button" onClick={handleLogout} className="logout-button">Exit demo</button></header>
     <main className="dashboard-main">
       <section className="panel setup-panel"><p className="eyebrow">01 / PROFILE DATA</p><h2>Start with a safe dataset</h2><p className="panel-intro">Upload synthetic or anonymized survey data. Roomer never displays contact details in recommendations.</p>
-        <div className="panel-content"><div><label htmlFor="csv-upload">Choose CSV</label><input id="csv-upload" type="file" accept=".csv,text/csv" onChange={handleFileUpload} />{fileName && <p className="file-name">{fileName}</p>}</div>
-          {data.length > 0 && <div><label htmlFor="person-select">Profile to match</label><select id="person-select" value={selectedPersonIndex} onChange={handleSelectionChange}><option value="" disabled>Choose a synthetic profile</option>{data.map((row, index) => <option key={index} value={index}>Candidate {index + 1}</option>)}</select></div>}
+        <div className="panel-content"><div><label htmlFor="csv-upload">Choose CSV</label><input id="csv-upload" type="file" accept=".csv,text/csv" onChange={handleFileUpload} />{fileName && <p className="file-name">{fileName}</p>}{data.length > 0 && <button type="button" className="clear-button" onClick={clearUploadedData}>Clear uploaded data</button>}</div>
+          {data.length > 0 && <div><label htmlFor="person-select">Profile to match</label><select id="person-select" value={selectedPersonIndex} onChange={handleSelectionChange}><option value="" disabled>Choose a profile</option>{data.map((row, index) => <option key={index} value={index}>{profileLabel(row, index)}</option>)}</select><p className="field-help">Names and serials are used only for this local selector. Results remain anonymized.</p></div>}
         </div>
         {error && <p className="error-message" role="alert">{error}</p>}
         <div className="privacy-note"><strong>Privacy first.</strong> Names, emails, phone numbers, and free-text notes are excluded from matching display.</div>
