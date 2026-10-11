@@ -1,0 +1,11 @@
+node_modules/
+build/
+.env
+.env.*
+*.log
+data/private/
+data/raw/
+*.parquet
+*.sqlite
+*.db
+.ipynb_checkpoints/
