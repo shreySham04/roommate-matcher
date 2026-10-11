@@ -19,12 +19,15 @@ Roomer is a privacy-conscious roommate recommendation demo. It ranks eligible sy
 ## Current implementation
 
 - React guest-mode interface with local CSV upload.
-- Browser-local CSV parsing with a 2 MB file limit and required-column validation.
+- Browser-local CSV/XLSX parsing with a 2 MB file limit and required-column validation.
+- Settings panel for changing each topic weight from 0 to 10 and reranking matches immediately.
 - One authoritative implementation in `matching.js` for normalization, hard eligibility, weighted scoring, explanations, and deterministic ties.
 - Header-only `roomy.csv`; no profiles are prefilled in the repository. Recommendation cards never display names, emails, phone numbers, or free-text survey responses.
 - Node test suite covering rent parsing, normalization, ranking, duplicate/self exclusion, gender constraints, ties, and empty input.
 
 The score is a rule-based compatibility summary, not a probability of successful cohabitation and not a validated prediction of user satisfaction.
+
+Weights can be adjusted in the Settings panel for location, rent, sleeping schedule, cleanliness, cooking, smoking, drinking, pets, and shared interests. A weight of zero disables that topic from the score. Uploaded spreadsheets must include the required housing columns; optional name and serial columns are used only for local labels.
 
 ## Architecture
 

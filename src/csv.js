@@ -1,3 +1,5 @@
+import * as XLSX from "xlsx";
+
 export const parseCsv = (source) => {
   const rows = []; let cell = ""; let row = []; let quoted = false;
   for (let index = 0; index < source.length; index += 1) {
@@ -17,4 +19,11 @@ export const validateRows = (rows, requiredColumns) => {
   if (!rows.length) return "The CSV does not contain any profiles.";
   const missingColumns = requiredColumns.filter((column) => !(column in rows[0]));
   return missingColumns.length ? `Missing required columns: ${missingColumns.join(", ")}` : null;
+};
+
+export const parseSpreadsheet = async (file) => {
+  if (file.name.toLowerCase().endsWith(".csv")) return parseCsv(await file.text());
+  const workbook = XLSX.read(await file.arrayBuffer(), { type: "array" });
+  const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+  return firstSheet ? XLSX.utils.sheet_to_json(firstSheet, { defval: "" }) : [];
 };

@@ -20,6 +20,9 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px s
 .file-name { color: var(--muted); font: .8rem Arial, sans-serif; overflow-wrap: anywhere; }
 .field-help { color: var(--muted); font: .75rem/1.4 Arial, sans-serif; }
 .privacy-note { margin-top: 2rem; padding: 1rem; border-left: 4px solid var(--mint); background: #edf4e8; color: var(--muted); font: .88rem/1.5 Arial, sans-serif; }
+.weight-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .8rem; }
+.weight-control { display: grid; grid-template-columns: 1fr 4rem; gap: .6rem; align-items: center; padding: .6rem; background: #f1f6ed; color: var(--ink); font: .78rem Arial, sans-serif; }
+.weight-control input { width: 100%; padding: .45rem; border: 1px solid var(--line); background: white; }
 .privacy-note strong { color: var(--ink); }
 .error-message { padding: .8rem; border-left: 4px solid var(--coral); background: #fff0eb; color: #8a2c1d; font: .88rem Arial, sans-serif; }
 .results-heading, .match-topline { display: flex; justify-content: space-between; gap: 1rem; align-items: center; }
@@ -46,4 +49,4 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px s
 .login-card input { margin-bottom: 1rem; }
 .login-card button { width: 100%; padding: .85rem; border: 0; background: var(--coral); color: white; cursor: pointer; }
 .login-card small { display: block; margin-top: 1rem; color: var(--muted); font: .75rem/1.4 Arial, sans-serif; }
-@media (max-width: 768px) { .login-container { grid-template-columns: 1fr; gap: 2rem; } .login-card { max-width: none; } .dashboard-main { grid-template-columns: 1fr; padding-top: 1rem; } .results-heading { display: block; } .score-legend { display: block; margin-top: .5rem; } }
+@media (max-width: 768px) { .login-container { grid-template-columns: 1fr; gap: 2rem; } .login-card { max-width: none; } .dashboard-main { grid-template-columns: 1fr; padding-top: 1rem; } .results-heading { display: block; } .score-legend { display: block; margin-top: .5rem; } .weight-grid { grid-template-columns: 1fr; } }
